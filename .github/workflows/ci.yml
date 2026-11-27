@@ -26,5 +26,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Shell syntax & diff integrity check (dogfooding)
+        run: |
+          bash -n init.sh template/.agents/update.sh template/scripts/*.sh template/.githooks/*
+          git diff --check
+
       - name: Run starter unit and E2E tests
         run: node --test tests/starter.test.mjs template/scripts/spec-gates.test.mjs

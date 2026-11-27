@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
-import { inspectGuardrails, parseArgs, runMinimalGates, runStagedGuardrails } from './spec-gates.mjs';
+import { inspectGuardrails, loadSpecKitConfig, parseArgs, runMinimalGates, runStagedGuardrails } from './spec-gates.mjs';
 
 const temps = [];
 afterEach(() => {
@@ -132,4 +132,36 @@ test('parseArgs 拦截缺失参数值，customGuardrails 报错清晰且拦截�
   const secRes = inspectGuardrails(secCfg, ['key.pem'], () => [`+${pem}`]);
   assert.equal(secRes.status, 'FAIL');
   assert.equal(secRes.findings[0].rule, 'G-SEC-PRIVATE-KEY');
+});
+
+test('向后兼容旧版精简 .spec-kit.json（省略 paths / disableGuardrails / customGuardrails）', () => {
+  const base = mkdtempSync(join(tmpdir(), 'spec-gates-compat-'));
+  temps.push(base);
+  const repo = join(base, 'legacy');
+  mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-b', 'main']);
+  git(repo, ['config', 'user.email', 'test@example.com']);
+  git(repo, ['config', 'user.name', 'Test']);
+  writeFileSync(join(repo, '.spec-kit.json'), JSON.stringify({
+    project: { name: 'legacy', targetBranch: 'main' },
+    presets: ['python-safety'],
+  }));
+  writeFileSync(join(repo, 'app.py'), 'def ok():\n    return 1\n');
+  git(repo, ['add', '.']);
+  git(repo, ['commit', '-m', 'init']);
+
+  const loaded = loadSpecKitConfig(repo);
+  assert.equal(loaded.project.worktreeRequired, true);
+  assert.ok(loaded.paths.pythonSourceRegex);
+  assert.deepEqual(loaded.disableGuardrails, []);
+  assert.deepEqual(loaded.customGuardrails, []);
+
+  const wt = join(base, 'legacy-wt-fix');
+  git(repo, ['worktree', 'add', '-b', 'spec/fix', wt, 'main']);
+  writeFileSync(join(wt, 'app.py'), 'def ok():\n    return 2\n');
+  git(wt, ['add', 'app.py']);
+  git(wt, ['commit', '-m', 'fix: update return value']);
+  const gate = runMinimalGates({ root: wt });
+  assert.equal(gate.passed, true);
+  assert.equal(gate.guardrails.status, 'PASS');
 });

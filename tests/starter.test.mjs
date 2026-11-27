@@ -175,3 +175,27 @@ test('init.sh 支持 0 提交全新空仓库（unborn HEAD）并放行首次合�
   const firstCommit = spawnSync('/usr/bin/git', ['commit', '-m', 'chore: initial commit'], { cwd: repo, encoding: 'utf8' });
   assert.equal(firstCommit.status, 0, `${firstCommit.stdout}\n${firstCommit.stderr}`);
 });
+
+test('ai-spec-starter 自举检查：全部 Shell 脚本语法合法且仓内文件通过密钥基线扫描', async () => {
+  const { inspectGuardrails, loadSpecKitConfig } = await import(join(STARTER_ROOT, 'template/scripts/spec-gates.mjs'));
+  const scripts = [
+    'init.sh',
+    'template/.agents/update.sh',
+    'template/scripts/create-worktree.sh',
+    'template/scripts/install-git-hooks.sh',
+    'template/.githooks/pre-commit',
+    'template/.githooks/pre-push',
+  ];
+  for (const rel of scripts) {
+    const syntax = spawnSync('bash', ['-n', join(STARTER_ROOT, rel)], { encoding: 'utf8' });
+    assert.equal(syntax.status, 0, `${rel}: ${syntax.stderr}`);
+  }
+  const tracked = git(STARTER_ROOT, ['ls-files']).split('\n').filter(Boolean);
+  const cfg = loadSpecKitConfig(STARTER_ROOT);
+  const res = inspectGuardrails(
+    cfg,
+    tracked,
+    (rel) => readFileSync(join(STARTER_ROOT, rel), 'utf8').split('\n').map((l) => `+${l}`),
+  );
+  assert.notEqual(res.status, 'FAIL', JSON.stringify(res.findings));
+});

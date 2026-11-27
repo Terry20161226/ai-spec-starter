@@ -14,7 +14,7 @@
 - **多 IDE 规范单一真源（`.agents/` + `update.sh`）**：只在 `.agents/` 维护一份 skills 与 commands，自动同步至 `.claude/`、`.qoder/`、`.codex/`，支持内容级 `--check`（已免疫 git mtime 误报）。
 - **隔离沙箱与本地 Git Hooks（`scripts/create-worktree.sh` + `.githooks/`）**：强制隔离 Worktree 开发，提交前触发 `pre-commit`（`--staged` 增量秒级拦截），推送前触发 `pre-push`（分支、clean、committed diff）。
 - **零依赖配置化静态门禁（`scripts/spec-gates.mjs` + `.spec-kit.json`）**：纯 Node.js 标准库实现，内置 5 个技术栈预设（Java Jakarta / TS 浮点精度与赋值红线 / SQL Flyway 冲突与不可变迁移守卫 / Python 安全与 `yaml.load` 检查 / 私钥防泄漏）、`.agents/` 镜像防漂移守卫、Spec 占位符守卫与 `customGuardrails`。
-- **可追溯升级（`.agents/.starter-version`）**：重复执行 `init.sh` 只刷新框架内核与版本号（如 `0.2.1 -> 0.2.2`），不覆盖项目自定义配置与业务规格。
+- **可追溯升级（`.agents/.starter-version`）**：重复执行 `init.sh` 只刷新框架内核与版本号（如 `0.2.2 -> 0.2.3`），不覆盖项目自定义配置与业务规格。
 
 ## 快速初始化到任意项目
 

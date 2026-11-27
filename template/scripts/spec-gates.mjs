@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 轻量可配置静态交付门禁 v0.2.2（零外部 npm 依赖）。
+ * 轻量可配置静态交付门禁 v0.2.3（零外部 npm 依赖）。
  * 读取仓库根目录 .spec-kit.json：
  *   - project.targetBranch / project.worktreeRequired
  *   - presets: java-jakarta | ts-no-float-money | sql-flyway | python-safety | secrets-baseline
