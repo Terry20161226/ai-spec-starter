@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 推送前兜底门禁：非主干分支推送时执行完整 committed diff 门禁（worktreeRequired=true 时要求隔离 worktree 且工作区干净）。
+if [[ "${SKIP_SPEC_GATES:-0}" == "1" ]]; then
+  exit 0
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+[[ -f "$REPO_ROOT/scripts/spec-gates.mjs" ]] || exit 0
+
+GIT_DIR="$(git rev-parse --path-format=absolute --git-dir)"
+COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
+BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
+
+CFG_META="$(node -e '
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const p = path.join(process.argv[1], ".spec-kit.json");
+  let branch = "main";
+  let wtReq = "1";
+  if (fs.existsSync(p)) {
+    const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
+    branch = cfg?.project?.targetBranch || "main";
+    wtReq = cfg?.project?.worktreeRequired === false ? "0" : "1";
+  }
+  process.stdout.write(branch + ":" + wtReq);
+' "$REPO_ROOT")"
+TARGET_BRANCH="${CFG_META%%:*}"
+WORKTREE_REQ="${CFG_META##*:}"
+
+if [[ -n "$BRANCH" ]] && [[ "$BRANCH" != "$TARGET_BRANCH" ]] && [[ "$BRANCH" != "master" ]]; then
+  if [[ "$WORKTREE_REQ" == "0" ]] || [[ "$GIT_DIR" != "$COMMON_DIR" ]]; then
+    if git show-ref --verify --quiet "refs/heads/$TARGET_BRANCH"; then
+      if ! GATE_JSON="$(node "$REPO_ROOT/scripts/spec-gates.mjs" --root "$REPO_ROOT" --target "$TARGET_BRANCH" --json 2>&1)"; then
+        printf '%s\n' "$GATE_JSON" >&2
+        exit 1
+      fi
+    fi
+  fi
+fi

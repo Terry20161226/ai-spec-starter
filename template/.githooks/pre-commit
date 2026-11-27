@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 提交前增量门禁：读取 .spec-kit.json，只对 Git 暂存区新增行执行静态红线与空白检查。
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+if [[ "${SKIP_SPEC_GATES:-0}" != "1" ]] && [[ -f "$REPO_ROOT/scripts/spec-gates.mjs" ]]; then
+  if ! GATE_JSON="$(node "$REPO_ROOT/scripts/spec-gates.mjs" --root "$REPO_ROOT" --staged --json 2>&1)"; then
+    printf '%s\n' "$GATE_JSON" >&2
+    exit 1
+  fi
+fi

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "project": {
+    "name": "__PROJECT_NAME__",
+    "targetBranch": "__TARGET_BRANCH__",
+    "worktreeRequired": true
+  },
+  "workflow": {
+    "default": "direct-fix",
+    "fullSpecSignals": [
+      "database_migration",
+      "cross_service_contract",
+      "state_machine_refactor",
+      "permission_model_change"
+    ]
+  },
+  "presets": __PRESETS_JSON__,
+  "paths": {
+    "migrationRegex": "(?:^|/)(?:db/migration|migrations|alembic/versions)/|(?:^|/)V\\d+(?:[._]\\d+)*__[^/]+\\.sql$",
+    "javaSourceRegex": "\\.java$",
+    "tsSourceRegex": "\\.(?:ts|tsx|js|jsx)$",
+    "pythonSourceRegex": "\\.py$",
+    "ignoreTestRegex": "(?:^|/)(?:tests?|__tests__|mock-server)/|\\.(?:test|spec)\\.[tj]sx?$|_test\\.py$"
+  },
+  "disableGuardrails": [],
+  "customGuardrails": []
+}
