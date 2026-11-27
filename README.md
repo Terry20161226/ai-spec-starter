@@ -1,5 +1,8 @@
 # ai-spec-starter
 
+[![CI](https://github.com/Terry20161226/ai-spec-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/Terry20161226/ai-spec-starter/actions/workflows/ci.yml)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 轻量、零外部依赖、多技术栈通用的 **AI Spec 驱动开发与确定性门禁** 骨架模板（从实战工程中剥离业务耦合提炼而成）。
 
 ## 包含什么
